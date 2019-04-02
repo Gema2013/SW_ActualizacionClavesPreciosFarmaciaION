@@ -3,18 +3,17 @@ Imports System.Data.SqlClient
 
 Namespace SP_BBDD
 
-    Public Class ActualizaPreciosMedicamentos_UpdateInsert
+    Public Class TCCB_Procedimientos_insert
 
         Public Sub New()
             MyBase.New()
         End Sub
 
-        Public Overridable Function ActualizaPreciosMedicamentos_UpdateInsert(ByVal connection As System.Data.SqlClient.SqlConnection, ByVal transaccion As System.Data.SqlClient.SqlTransaction, ByVal table As System.Data.DataTable, _
-                                                         ByVal PrecioSigaf As Double,
-                                                         ByVal Clave As String,
-                                                         ByVal Nivel As Integer)
-            ' ,ByVal ID As Long)
-
+        Public Overridable Function TCCB_Procedimientos_insert(ByVal connection As System.Data.SqlClient.SqlConnection, ByVal transaccion As System.Data.SqlClient.SqlTransaction, ByVal table As System.Data.DataTable,
+                                                        ByVal Clave As String,
+                                                        ByVal Descripcion As String,
+                                                        ByVal IVA As Double,
+                                                        ByVal Precio As Double)
             Dim RETURN_VALUE As Integer = 0
             Dim cmd As System.Data.SqlClient.SqlCommand = Nothing
             Dim reader As System.Data.SqlClient.SqlDataReader = Nothing
@@ -27,31 +26,33 @@ Namespace SP_BBDD
                         connection.Open()
                         'Abrir Conexion
                     End If
-                    cmd = New System.Data.SqlClient.SqlCommand("ActualizaPreciosMedicamentos_UpdateInsert", connection)
+                    cmd = New System.Data.SqlClient.SqlCommand("TCCB_Procedimientos_insert", connection)
                     cmd.CommandType = System.Data.CommandType.StoredProcedure
                 Else
-                    cmd = New System.Data.SqlClient.SqlCommand("ActualizaPreciosMedicamentos_UpdateInsert", connection, transaccion)
+                    cmd = New System.Data.SqlClient.SqlCommand("TCCB_Procedimientos_insert", connection, transaccion)
                     cmd.CommandType = System.Data.CommandType.StoredProcedure
                 End If
                 cmd.Parameters.Add("@RETURN_VALUE", System.Data.SqlDbType.Int, 0)
                 cmd.Parameters("@RETURN_VALUE").Direction = System.Data.ParameterDirection.ReturnValue
                 cmd.Parameters("@RETURN_VALUE").Value = RETURN_VALUE
 
-                cmd.Parameters.Add("@PrecioSigaf", System.Data.SqlDbType.Money, 0)
-                cmd.Parameters("@PrecioSigaf").Direction = System.Data.ParameterDirection.Input
-                cmd.Parameters("@PrecioSigaf").Value = PrecioSigaf
 
-                cmd.Parameters.Add("@Clave", System.Data.SqlDbType.VarChar, 20)
-                cmd.Parameters("@Clave").Direction = System.Data.ParameterDirection.Input
-                cmd.Parameters("@Clave").Value = Clave
+                cmd.Parameters.Add("@ClaveProcedimiento", System.Data.SqlDbType.VarChar)
+                cmd.Parameters("@ClaveProcedimiento").Direction = System.Data.ParameterDirection.Input
+                cmd.Parameters("@ClaveProcedimiento").Value = Clave
+                cmd.Parameters.Add("@DescripcionProcedimiento", System.Data.SqlDbType.VarChar)
+                cmd.Parameters("@DescripcionProcedimiento").Direction = System.Data.ParameterDirection.Input
+                cmd.Parameters("@DescripcionProcedimiento").Value = Descripcion
 
-                cmd.Parameters.Add("@Nivel", System.Data.SqlDbType.Int, 0)
-                cmd.Parameters("@Nivel").Direction = System.Data.ParameterDirection.Input
-                cmd.Parameters("@Nivel").Value = Nivel
 
-                'cmd.Parameters.Add("@ID", System.Data.SqlDbType.BigInt, 0)
-                'cmd.Parameters("@ID").Direction = System.Data.ParameterDirection.Input
-                'cmd.Parameters("@ID").Value = ID
+                cmd.Parameters.Add("@IVA", System.Data.SqlDbType.Decimal)
+                cmd.Parameters("@IVA").Direction = System.Data.ParameterDirection.Input
+                cmd.Parameters("@IVA").Value = IVA
+
+                cmd.Parameters.Add("@Precio", System.Data.SqlDbType.Decimal)
+                cmd.Parameters("@Precio").Direction = System.Data.ParameterDirection.Input
+                cmd.Parameters("@Precio").Value = Precio
+
                 If (Not (table) Is Nothing) Then
                     reader = cmd.ExecuteReader
                 Else
@@ -81,10 +82,6 @@ Namespace SP_BBDD
                     Loop
                     reader.Close()
                 End If
-                'El parametro @RETURN_VALUE no es de tipo output
-                'El parametro @PacienteExpediente no es de tipo output
-                'El parametro @PacienteHabilitado no es de tipo output
-                'El parametro @ID no es de tipo output
                 If (transaccion Is Nothing) Then
                     connection.Close()
                 End If

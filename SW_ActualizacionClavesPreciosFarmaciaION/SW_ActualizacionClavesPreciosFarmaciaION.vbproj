@@ -109,7 +109,10 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Clases\actualizarEstatusProductosNuevos_Update.vb" />
     <Compile Include="Clases\Conexiones.vb" />
+    <Compile Include="Clases\obtenerClavesNuevas_Select.vb" />
+    <Compile Include="Clases\TCCB_Procedimientos_insert.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>

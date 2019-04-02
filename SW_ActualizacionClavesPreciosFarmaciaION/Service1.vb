@@ -49,8 +49,8 @@ Public Class ServicioActualizacionION
     Private Sub ActualizacionClavesFarmacia()
         While True
             ProcesaActualizacionMedicamentosPendiente()
-            'Thread.Sleep(60000) '10 min
-            Thread.Sleep(6000) ' 1 min
+            Thread.Sleep(60000) '10 min pruebas
+            'Thread.Sleep(6000) ' 1 min
         End While
     End Sub
 
@@ -84,7 +84,10 @@ Public Class ServicioActualizacionION
         Dim blnExito As Boolean = False
         Try
             elogLogEventos.WriteEntry("Iniciada la actualización por minuto de claves y usuarios de farmacia", EventLogEntryType.Information)
+            'Las nuevas claves de farmacia (Procesado=0) con sus precios se deben guardar en la base ion CALL usp_catalogo_obtenerProductosNuevos();
+            'y actualizar estatus de Procesado=1
             ActualizacionClaves()
+            ' ActualizacionUsuarios()
             elogLogEventos.WriteEntry("Actualización completa exitosa: " & Now.ToString, EventLogEntryType.Information)
 
         Catch ex As Exception
@@ -95,13 +98,23 @@ Public Class ServicioActualizacionION
 
     Private Sub ActualizacionClaves()
         'Obtiene claves a procesar desde Mysql
+        Dim dt As New DataTable
         Dim conexion As MySqlConnection = Nothing
         Try
             conexion = Conexiones.ConexionMySQL
             conexion.Open()
-            elogLogEventos.WriteEntry("Conectado al servidor MySql")
+            elogLogEventos.WriteEntry("Conectado al servidor MySql para obtener claves....")
+            Dim sp As New SP_BBDD.ObtenerClavesNuevas_select
+
+
+            sp.ObtenerClavesNuevas_select(conexion, Nothing, dt)
+
+
+            elogLogEventos.WriteEntry("Obtuve :" & dt.Rows.Count & " claves sin procesar")
+
+
         Catch ex As MySqlException
-            elogLogEventos.WriteEntry("No se ha podido conectar al servidor")
+            elogLogEventos.WriteEntry("Error Obteniendo claves nuevas para procesar")
         Finally
             If conexion IsNot Nothing Then
                 conexion.Close()
@@ -111,16 +124,32 @@ Public Class ServicioActualizacionION
 
 
         Dim MiConexion As SqlConnection = Nothing
+        Dim tran As SqlTransaction = Nothing
         Dim dtClavesNoProcesadas As New DataTable
-
+        Dim strXmlClaves As String = "<data><items>"
         Try
             MiConexion = Conexiones.Conexion
             MiConexion.Open()
+            tran = MiConexion.BeginTransaction(IsolationLevel.ReadUncommitted)
 
-            'Acciones obtener en Base ion
-            elogLogEventos.WriteEntry("Conectado al servidor Sql")
+            'Inserta nuevas claves en BD de ion
+            Dim spInserta As New SP_BBDD.TCCB_Procedimientos_insert
+            For Each row In dt.Rows
+                spInserta.TCCB_Procedimientos_insert(MiConexion, tran, Nothing, row!codigo, row!nombre, 0, row!precio_venta)
+                strXmlClaves = strXmlClaves & "<row catalogo_k = """ & row!catalogo_k & """/>"
+                elogLogEventos.WriteEntry("Se insertó una clave " & row!codigo)
+                Exit For
+
+            Next
+            strXmlClaves = strXmlClaves & "</items></data>"
+
+
+            tran.Commit()
         Catch ex As Exception
-            elogLogEventos.WriteEntry("Error al obtener usuarios que existen en la base de ION: " & ex.ToString, EventLogEntryType.Error)
+            If tran IsNot Nothing Then
+                tran.Rollback()
+            End If
+            elogLogEventos.WriteEntry("Error insertando claves nuevas. Error: " & ex.ToString, EventLogEntryType.Error)
         Finally
             If MiConexion IsNot Nothing Then
                 MiConexion.Close()
@@ -130,28 +159,28 @@ Public Class ServicioActualizacionION
 
 
 
-        'Inserta claves y precios nuevos en BDSION
-        Dim sqlconConexion As SqlConnection = Nothing
-        Dim sqltranTransaccion As SqlTransaction = Nothing
+        'Actualizar claves procesadas en Farmacia
+        Dim MyCon As MySqlConnection = Nothing
+        Dim success As Boolean = False
+
         Try
-            sqlconConexion = Conexiones.Conexion
-            sqlconConexion.Open()
-            sqltranTransaccion = sqlconConexion.BeginTransaction(IsolationLevel.ReadUncommitted)
+            MyCon = Conexiones.ConexionMySQL
+            MyCon.Open()
 
-            'Acciones insert, update en base ion
-
-            sqltranTransaccion.Commit()
+            'Inserta nuevas claves en BD de ion
+            Dim spAct As New SP_BBDD.ActualizaPreciosMedicamentos_UpdateInsert
+            spAct.ActualizaPreciosMedicamentos_UpdateInsert(MyCon, Nothing, Nothing, strXmlClaves, success)
+            elogLogEventos.WriteEntry("Se actualizaron estatus de claves procesadas." & strXmlClaves)
         Catch ex As Exception
-            If sqltranTransaccion IsNot Nothing Then
-                sqltranTransaccion.Rollback()
-            End If
-            elogLogEventos.WriteEntry("Insertar claves y actualizar precios en base ION. Error: " & ex.ToString, EventLogEntryType.Error)
+            elogLogEventos.WriteEntry("Error actualizando claves procesadas. Error: " & ex.ToString, EventLogEntryType.Error)
         Finally
-            If sqlconConexion IsNot Nothing Then
-                sqlconConexion.Close()
-                sqlconConexion.Dispose()
+            If MyCon IsNot Nothing Then
+                MyCon.Close()
+                MyCon.Dispose()
             End If
         End Try
+
+
     End Sub
 
 
