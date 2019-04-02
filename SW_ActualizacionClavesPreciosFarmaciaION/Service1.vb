@@ -105,8 +105,6 @@ Public Class ServicioActualizacionION
             conexion.Open()
             elogLogEventos.WriteEntry("Conectado al servidor MySql para obtener claves....")
             Dim sp As New SP_BBDD.ObtenerClavesNuevas_select
-
-
             sp.ObtenerClavesNuevas_select(conexion, Nothing, dt)
 
 
@@ -114,7 +112,7 @@ Public Class ServicioActualizacionION
 
 
         Catch ex As MySqlException
-            elogLogEventos.WriteEntry("Error Obteniendo claves nuevas para procesar")
+            elogLogEventos.WriteEntry("Error obteniendo claves nuevas para procesar")
         Finally
             If conexion IsNot Nothing Then
                 conexion.Close()
@@ -137,14 +135,14 @@ Public Class ServicioActualizacionION
             For Each row In dt.Rows
                 spInserta.TCCB_Procedimientos_insert(MiConexion, tran, Nothing, row!codigo, row!nombre, 0, row!precio_venta)
                 strXmlClaves = strXmlClaves & "<row catalogo_k = """ & row!catalogo_k & """/>"
-                elogLogEventos.WriteEntry("Se insertó una clave " & row!codigo)
+                'El exit es para realizar pruebas 1 x1
                 Exit For
 
             Next
             strXmlClaves = strXmlClaves & "</items></data>"
 
-
             tran.Commit()
+            elogLogEventos.WriteEntry("Se insertaron las claves" & strXmlClaves)
         Catch ex As Exception
             If tran IsNot Nothing Then
                 tran.Rollback()
@@ -183,49 +181,6 @@ Public Class ServicioActualizacionION
 
     End Sub
 
-
-    'Private Sub ActualizaUMPoblacionAbierta(ByVal dtClavesMedicamentosUM As DataTable, ByVal ExpedientePA As String, ByRef trans As SqlTransaction, ByRef conex As SqlConnection)
-    '    If dtClavesMedicamentosUM.Rows.Count > 0 And ExpedientePA <> "" Then
-    '        For Each row In dtClavesMedicamentosUM.Rows
-    '            'Verificar precio
-    '            Dim DatosSalida As CLConsultaPreciosSigaf.obtenerPrecioVentaMedicamentosDataTypeOut
-    '            DatosSalida = ObtienePrecioSigaf(ExpedientePA, row!ClaveUM)
-
-    '            Try
-    '                Dim i As Integer = 1
-    '                While i <= 7 'Niveles 1,2,3,4,5,6,7
-    '                    Dim spActualizaPrecio As New SP_BBDD.ActualizaPreciosMedicamentos_UpdateInsert
-    '                    spActualizaPrecio.ActualizaPreciosMedicamentos_UpdateInsert(conex, trans, Nothing, Redondear((DatosSalida.returnValue.expedientes(0).precios(0).precioVenta) / row!Factor), "UM" & row!ClaveUM, i)
-    '                    i += 1
-    '                End While
-    '            Catch ex As Exception
-    '                'volver a lanzar exception
-    '                Throw (ex)
-    '            End Try
-
-    '        Next
-    '    Else
-    '        elogLogEventos.WriteEntry("Datos incompletos para realizar la actualización de claves UM. Población abierta")
-    '    End If
-    'End Sub
-
-    'Private Function ObtienePrecioSigaf(ByVal Expediente As String, ByVal clave As String) As obtenerPrecioVentaMedicamentosDataTypeOut
-    '    Dim ConsumoServicio As New CLConsultaPreciosSigaf.ConsultaPrecioService
-    '    Dim edmEncabezadoDisponbilidad As New CLConsultaPreciosSigaf.ExpedienteProductosType
-    '    'solicitar precio de cada clave
-    '    edmEncabezadoDisponbilidad.expediente = Expediente
-    '    edmEncabezadoDisponbilidad.productos = {clave}
-
-    '    Dim odmtdiEntradaObtenerDisponibilidad As New obtenerPrecioVentaMedicamentosDataTypeIn
-    '    odmtdiEntradaObtenerDisponibilidad.expedientes = {edmEncabezadoDisponbilidad}
-    '    Return ConsumoServicio.obtenerPrecioVentaMedicamentos(odmtdiEntradaObtenerDisponibilidad)
-
-    'End Function
-
-    Private Function Redondear(ByVal Precio As String) As Decimal
-        Dim rounded As Decimal = Decimal.Round(System.Convert.ToDecimal(Precio), 6)
-        Return rounded
-    End Function
 
 #End Region
 
