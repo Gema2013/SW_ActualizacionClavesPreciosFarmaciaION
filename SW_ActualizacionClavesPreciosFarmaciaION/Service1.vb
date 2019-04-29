@@ -4,7 +4,7 @@ Imports MySql.Data.MySqlClient
 
 
 Public Class ServicioActualizacionION
-    Const StrNombreAplicacion As String = "Actualiza farmacia ION."
+    Const StrNombreAplicacion As String = "Actualiza farmacia-ION. "
 
     Dim elogLogEventos As New EventLog
 
