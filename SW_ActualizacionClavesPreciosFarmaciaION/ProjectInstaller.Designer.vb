@@ -32,7 +32,7 @@
         '
         'ServiceInstaller1
         '
-        Me.ServiceInstaller1.ServiceName = "ServiceActualizacionION"
+        Me.ServiceInstaller1.ServiceName = "Service Actualizacion ION"
         '
         'ProjectInstaller
         '

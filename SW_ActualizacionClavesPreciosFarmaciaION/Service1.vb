@@ -4,7 +4,7 @@ Imports MySql.Data.MySqlClient
 
 
 Public Class ServicioActualizacionION
-    Const StrNombreAplicacion As String = "Actualiza farmacia-ION."
+    Const StrNombreAplicacion As String = "Actualiza farmacia ION."
 
     Dim elogLogEventos As New EventLog
 
@@ -57,27 +57,27 @@ Public Class ServicioActualizacionION
     Private Sub ProcesaActualizacionMedicamentosPendiente()
         'Base en SION
         'Ambiente de pruebas
-        Conexiones.Catalog = "BDSION"
+        'Conexiones.Catalog = "BDSION"
         Conexiones.ID = "sa"
         Conexiones.Pwd = "s4_password"
         Conexiones.Source = "70.35.194.173"
 
         'Ambiente producción
-        'Conexiones.Catalog = "BDSIONProduccion"
+        Conexiones.Catalog = "BDSIONProduccion"
 
 
 
         'Base en Farmacia
 
         'Ambiente de pruebas
-        Conexiones.CatalogMySql = "farmacia"
+        ' Conexiones.CatalogMySql = "farmacia"
         Conexiones.SourceMySql = "70.35.194.173"
         Conexiones.PortMySql = 3306
         Conexiones.IDMySql = "root"
         Conexiones.PwdMySql = "s3rv3rS1nu3"
 
         'Ambiente producción
-        'Conexiones.CatalogMySql = "farmaciaprod"
+        Conexiones.CatalogMySql = "farmaciaprod"
 
 
 
@@ -132,12 +132,16 @@ Public Class ServicioActualizacionION
 
             'Inserta nuevas claves en BD de ion
             Dim spInserta As New SP_BBDD.TCCB_Procedimientos_insert
+            Dim i As Integer = 0
             For Each row In dt.Rows
                 spInserta.TCCB_Procedimientos_insert(MiConexion, tran, Nothing, row!codigo, row!nombre, 0, row!precio_venta)
                 strXmlClaves = strXmlClaves & "<row catalogo_k = """ & row!catalogo_k & """/>"
                 'El exit es para realizar pruebas 1 x1
-                Exit For
-
+                'Exit For
+                i = i + 1
+                If i = 50 Then
+                    Exit For
+                End If
             Next
             strXmlClaves = strXmlClaves & "</items></data>"
 
