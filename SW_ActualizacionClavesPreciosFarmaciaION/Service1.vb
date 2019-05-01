@@ -60,27 +60,27 @@ Public Class ServicioActualizacionION
     Private Sub ProcesaActualizacionMedicamentosPendiente()
         'Base en SION
         'Ambiente de pruebas
-        Conexiones.Catalog = "BDSION"
+        ' Conexiones.Catalog = "BDSION"
         Conexiones.ID = "sa"
         Conexiones.Pwd = "s4_password"
         Conexiones.Source = "70.35.194.173"
 
         'Ambiente producción
-        ' Conexiones.Catalog = "BDSIONProduccion"
+        Conexiones.Catalog = "BDSIONProduccion"
 
 
 
         'Base en Farmacia
 
         'Ambiente de pruebas
-        Conexiones.CatalogMySql = "farmacia"
+        'Conexiones.CatalogMySql = "farmacia"
         Conexiones.SourceMySql = "70.35.194.173"
         Conexiones.PortMySql = 3306
         Conexiones.IDMySql = "root"
         Conexiones.PwdMySql = "s3rv3rS1nu3"
 
         'Ambiente producción
-        'Conexiones.CatalogMySql = "farmaciaprod"
+        Conexiones.CatalogMySql = "farmaciaprod"
 
 
 
