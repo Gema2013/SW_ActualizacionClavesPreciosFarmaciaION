@@ -4,7 +4,7 @@ Imports MySql.Data.MySqlClient
 
 
 Public Class ServicioActualizacionION
-    Const StrNombreAplicacion As String = "Actualiza farmacia-ION. "
+    Const StrNombreAplicacion As String = "Actualiza farmacia-ION."
 
     Dim elogLogEventos As New EventLog
 
@@ -28,7 +28,6 @@ Public Class ServicioActualizacionION
             If (Not EventLog.SourceExists(StrNombreAplicacion)) Then
                 EventLog.CreateEventSource(StrNombreAplicacion, StrNombreAplicacion)
             End If
-
             elogLogEventos.Source = StrNombreAplicacion
             elogLogEventos.WriteEntry("Inicio del servicio ""Actualización de claves de farmacia"" V1", EventLogEntryType.Information)
 
@@ -38,9 +37,13 @@ Public Class ServicioActualizacionION
             TrdProcesaActualizacionFarmacia.Start()
 
             elogLogEventos.WriteEntry("Servicio iniciado correctamente", EventLogEntryType.Information)
+
+            'Para escribir en el registro de Aplicación de windows.
+            EventLog.WriteEntry("Se inicia servicio de act de ION-Farmacia", EventLogEntryType.FailureAudit)
+
         Catch exExcepcion As Exception
-            elogLogEventos.WriteEntry("No puedo iniciarse el servicio, " & exExcepcion.ToString, EventLogEntryType.FailureAudit)
-            elogLogEventos.WriteEntry("Cierre inesperado", EventLogEntryType.FailureAudit)
+            EventLog.WriteEntry("No puedo iniciarse el servicio, " & exExcepcion.ToString, EventLogEntryType.FailureAudit)
+            EventLog.WriteEntry("Cierre inesperado", EventLogEntryType.FailureAudit)
             Me.Stop()
         End Try
 
@@ -57,27 +60,27 @@ Public Class ServicioActualizacionION
     Private Sub ProcesaActualizacionMedicamentosPendiente()
         'Base en SION
         'Ambiente de pruebas
-        'Conexiones.Catalog = "BDSION"
+        Conexiones.Catalog = "BDSION"
         Conexiones.ID = "sa"
         Conexiones.Pwd = "s4_password"
         Conexiones.Source = "70.35.194.173"
 
         'Ambiente producción
-        Conexiones.Catalog = "BDSIONProduccion"
+        ' Conexiones.Catalog = "BDSIONProduccion"
 
 
 
         'Base en Farmacia
 
         'Ambiente de pruebas
-        ' Conexiones.CatalogMySql = "farmacia"
+        Conexiones.CatalogMySql = "farmacia"
         Conexiones.SourceMySql = "70.35.194.173"
         Conexiones.PortMySql = 3306
         Conexiones.IDMySql = "root"
         Conexiones.PwdMySql = "s3rv3rS1nu3"
 
         'Ambiente producción
-        Conexiones.CatalogMySql = "farmaciaprod"
+        'Conexiones.CatalogMySql = "farmaciaprod"
 
 
 

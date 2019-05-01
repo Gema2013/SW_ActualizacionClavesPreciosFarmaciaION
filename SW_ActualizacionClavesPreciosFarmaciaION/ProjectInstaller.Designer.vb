@@ -26,13 +26,14 @@
         '
         'ServiceProcessInstaller1
         '
-        Me.ServiceProcessInstaller1.Account = System.ServiceProcess.ServiceAccount.LocalService
+        Me.ServiceProcessInstaller1.Account = System.ServiceProcess.ServiceAccount.LocalSystem
         Me.ServiceProcessInstaller1.Password = Nothing
         Me.ServiceProcessInstaller1.Username = Nothing
         '
         'ServiceInstaller1
         '
         Me.ServiceInstaller1.ServiceName = "Servicio Actualiza ION-Farmacia"
+        Me.ServiceInstaller1.StartType = System.ServiceProcess.ServiceStartMode.Automatic
         '
         'ProjectInstaller
         '
