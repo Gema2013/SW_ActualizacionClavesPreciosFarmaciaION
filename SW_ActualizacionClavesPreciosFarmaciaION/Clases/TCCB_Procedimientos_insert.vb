@@ -12,8 +12,10 @@ Namespace SP_BBDD
         Public Overridable Function TCCB_Procedimientos_insert(ByVal connection As System.Data.SqlClient.SqlConnection, ByVal transaccion As System.Data.SqlClient.SqlTransaction, ByVal table As System.Data.DataTable,
                                                         ByVal Clave As String,
                                                         ByVal Descripcion As String,
-                                                        ByVal IVA As Double,
-                                                        ByVal Precio As Double)
+                                                        ByVal TasaIVA As Integer,
+                                                        ByVal Precio As Double,
+                                                        ByVal CodigoBarras As String,
+                                                        ByVal Activo As Boolean)
             Dim RETURN_VALUE As Integer = 0
             Dim cmd As System.Data.SqlClient.SqlCommand = Nothing
             Dim reader As System.Data.SqlClient.SqlDataReader = Nothing
@@ -44,14 +46,18 @@ Namespace SP_BBDD
                 cmd.Parameters("@DescripcionProcedimiento").Direction = System.Data.ParameterDirection.Input
                 cmd.Parameters("@DescripcionProcedimiento").Value = Descripcion
 
-
-                cmd.Parameters.Add("@IVA", System.Data.SqlDbType.Decimal)
-                cmd.Parameters("@IVA").Direction = System.Data.ParameterDirection.Input
-                cmd.Parameters("@IVA").Value = IVA
+                cmd.Parameters.Add("@TasaIVA", System.Data.SqlDbType.Int)
+                cmd.Parameters("@TasaIVA").Direction = System.Data.ParameterDirection.Input
+                cmd.Parameters("@TasaIVA").Value = TasaIVA
 
                 cmd.Parameters.Add("@Precio", System.Data.SqlDbType.Decimal)
                 cmd.Parameters("@Precio").Direction = System.Data.ParameterDirection.Input
                 cmd.Parameters("@Precio").Value = Precio
+
+                cmd.Parameters.Add("@CodigoBarras", System.Data.SqlDbType.VarChar)
+                cmd.Parameters("@CodigoBarras").Direction = System.Data.ParameterDirection.Input
+                cmd.Parameters("@CodigoBarras").Value = CodigoBarras
+
 
                 If (Not (table) Is Nothing) Then
                     reader = cmd.ExecuteReader

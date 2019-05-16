@@ -52,7 +52,8 @@ Public Class ServicioActualizacionION
     Private Sub ActualizacionClavesFarmacia()
         While True
             ProcesaActualizacionMedicamentosPendiente()
-            Thread.Sleep(60000) '10 min pruebas
+            'Thread.Sleep(60000) '10 min pruebas
+            Thread.Sleep(30000) '5 min 
             'Thread.Sleep(6000) ' 1 min
         End While
     End Sub
@@ -137,7 +138,7 @@ Public Class ServicioActualizacionION
             Dim spInserta As New SP_BBDD.TCCB_Procedimientos_insert
             Dim i As Integer = 0
             For Each row In dt.Rows
-                spInserta.TCCB_Procedimientos_insert(MiConexion, tran, Nothing, row!codigo, row!nombre, 0, row!precio_venta)
+                spInserta.TCCB_Procedimientos_insert(MiConexion, tran, Nothing, row!codigo, row!nombre, row!impuesto_fk, row!precio_venta, row!codigo_barras, row!activo)
                 strXmlClaves = strXmlClaves & "<row catalogo_k = """ & row!catalogo_k & """/>"
                 'El exit es para realizar pruebas 1 x1
                 'Exit For
