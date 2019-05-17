@@ -58,6 +58,10 @@ Namespace SP_BBDD
                 cmd.Parameters("@CodigoBarras").Direction = System.Data.ParameterDirection.Input
                 cmd.Parameters("@CodigoBarras").Value = CodigoBarras
 
+                cmd.Parameters.Add("@Activo", System.Data.SqlDbType.Bit)
+                cmd.Parameters("@Activo").Direction = System.Data.ParameterDirection.Input
+                cmd.Parameters("@Activo").Value = Activo
+
 
                 If (Not (table) Is Nothing) Then
                     reader = cmd.ExecuteReader
