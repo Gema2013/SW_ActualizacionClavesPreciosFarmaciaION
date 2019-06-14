@@ -74,6 +74,8 @@ Namespace SP_BBDD
                     Loop
                     reader.Close()
                 End If
+                'Cachar el valor de success
+                _success = CType(q.Value, Boolean)
 
                 If (transaccion Is Nothing) Then
                     connection.Close()
