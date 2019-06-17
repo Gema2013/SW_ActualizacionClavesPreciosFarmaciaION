@@ -95,7 +95,7 @@ Public Class ServicioActualizacionION
             elogLogEventos.WriteEntry("Iniciada la actualización por minuto de usuarios de farmacia", EventLogEntryType.Information)
             ActualizacionUsuariosFarmacia()
 
-            elogLogEventos.WriteEntry("Actualización completa exitosa: " & Now.ToString, EventLogEntryType.Information)
+            elogLogEventos.WriteEntry("Procesos del servicio terminados, revise histórico para resultados: " & Now.ToString, EventLogEntryType.Information)
 
         Catch ex As Exception
             elogLogEventos.WriteEntry("Error: " & ex.ToString, EventLogEntryType.Error)
@@ -153,7 +153,7 @@ Public Class ServicioActualizacionION
                 strXmlClaves = strXmlClaves & "</items></data>"
 
                 tran.Commit()
-                elogLogEventos.WriteEntry("Se insertaron las claves" & strXmlClaves)
+                elogLogEventos.WriteEntry("Se insertaron las claves " & strXmlClaves)
             Catch ex As Exception
                 If tran IsNot Nothing Then
                     tran.Rollback()
@@ -181,7 +181,7 @@ Public Class ServicioActualizacionION
                 Dim spAct As New SP_BBDD.ActualizaPreciosMedicamentos_UpdateInsert
                 spAct.ActualizaPreciosMedicamentos_UpdateInsert(MyCon, Nothing, Nothing, strXmlClaves, success)
                 If success Then
-                    elogLogEventos.WriteEntry("Se actualizaron estatus de claves procesadas." & strXmlClaves)
+                    elogLogEventos.WriteEntry("Se actualizaron estatus de claves procesadas. " & strXmlClaves)
                 Else
                     elogLogEventos.WriteEntry("No se procesaron correctamente las claves: " & strXmlClaves)
                 End If
@@ -214,7 +214,7 @@ Public Class ServicioActualizacionION
             Dim spClavesUs As New SP_BBDD.ObtienePendientesProcesaFarm_select
             spClavesUs.ObtienePendientesProcesaFarm_select(SqlConexion, SqlTran, dtClavesUsNoProcesadas)
 
-            elogLogEventos.WriteEntry("Obtuve " & dtClavesUsNoProcesadas.Rows.Count & "usuarios para procesar")
+            elogLogEventos.WriteEntry("Obtuve " & dtClavesUsNoProcesadas.Rows.Count & " usuarios para procesar")
 
         Catch ex As Exception
             elogLogEventos.WriteEntry("Error obteniendo claves de usuario no procesadas. Error: " & ex.ToString, EventLogEntryType.Error)
@@ -254,7 +254,7 @@ Public Class ServicioActualizacionION
                     strXmlClavesUs = strXmlClavesUs & " direccion = """""
                     strXmlClavesUs = strXmlClavesUs & " login = """ & row!claveUsuario & """"
                     strXmlClavesUs = strXmlClavesUs & " contrasenya = """ & PswEncriptado & """"
-                    strXmlClavesUs = strXmlClavesUs & " almacen_fk = """ & 1 & """"
+                    strXmlClavesUs = strXmlClavesUs & " almacen_fk = """ & 2 & """"
                     strXmlClavesUs = strXmlClavesUs & " rol_fk = """ & 1 & """/>"
                 Next
 
