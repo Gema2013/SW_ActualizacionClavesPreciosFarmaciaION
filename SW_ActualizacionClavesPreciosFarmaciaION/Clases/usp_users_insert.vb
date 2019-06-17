@@ -13,7 +13,8 @@ Namespace SP_BBDD
                                                                               ByVal transaccion As MySqlTransaction,
                                                                               ByVal table As DataTable,
                                                                             ByVal _xmlInput As String,
-                                                                            ByRef _success As Boolean
+                                                                            ByRef _success As Boolean,
+                                                                            ByRef _NoCreados As String
                                                                             )
             Dim cmd As MySqlCommand = Nothing
             Dim reader As MySqlDataReader = Nothing
@@ -42,6 +43,11 @@ Namespace SP_BBDD
                 q.Value = _success
                 q.Direction = ParameterDirection.Output
                 cmd.Parameters.Add(q)
+
+                Dim r As New MySqlParameter("?repited", MySql.Data.MySqlClient.MySqlDbType.VarChar)
+                r.Value = _NoCreados
+                r.Direction = ParameterDirection.Output
+                cmd.Parameters.Add(r)
 
 
                 If (Not (table) Is Nothing) Then
@@ -75,6 +81,7 @@ Namespace SP_BBDD
                 End If
                 'Cachar el valor de success
                 _success = CType(q.Value, Boolean)
+                _NoCreados = CType(IIf(IsDBNull(r.Value), "", r.Value), String)
                 If (transaccion Is Nothing) Then
                     connection.Close()
                 End If

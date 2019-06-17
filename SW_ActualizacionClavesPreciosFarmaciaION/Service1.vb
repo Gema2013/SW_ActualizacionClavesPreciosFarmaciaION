@@ -61,27 +61,27 @@ Public Class ServicioActualizacionION
     Private Sub ProcesaActualizacionMedicamentosPendiente()
         'Base en SION
         'Ambiente de pruebas
-        Conexiones.Catalog = "BDSION"
+        'Conexiones.Catalog = "BDSION"
         Conexiones.ID = "sa"
         Conexiones.Pwd = "s4_password"
         Conexiones.Source = "70.35.194.173"
 
         'Ambiente producción
-        'Conexiones.Catalog = "BDSIONProduccion"
+        Conexiones.Catalog = "BDSIONProduccion"
 
 
 
         'Base en Farmacia
 
         'Ambiente de pruebas
-        Conexiones.CatalogMySql = "farmacia"
+        'Conexiones.CatalogMySql = "farmacia"
         Conexiones.SourceMySql = "70.35.194.173"
         Conexiones.PortMySql = 3306
         Conexiones.IDMySql = "root"
         Conexiones.PwdMySql = "s3rv3rS1nu3"
 
         'Ambiente producción
-        'Conexiones.CatalogMySql = "farmaciaprod"
+        Conexiones.CatalogMySql = "farmaciaprod"
 
 
 
@@ -228,6 +228,7 @@ Public Class ServicioActualizacionION
         Dim MySqlCon As MySqlConnection = Nothing
         Dim strXmlClavesUs As String = "<data><items>"
         Dim successUs As Boolean = False
+        Dim usuariosNoCreados As String = False
 
         Try
             MySqlCon = Conexiones.ConexionMySQL
@@ -240,25 +241,25 @@ Public Class ServicioActualizacionION
             For Each row In dtClavesUsNoProcesadas.Rows
                 Dim Psw As String = row!claveUsuario + "_ion381"
                 Dim PswEncriptado = CodeShare.Cryptography.Encriptacion.GenerateSHA256String(Psw)
-                strXmlClavesUs = strXmlClavesUs & "<row curp = """"/>"
-                strXmlClavesUs = strXmlClavesUs & "<row nombres = """ & row!nombre & """/>"
-                strXmlClavesUs = strXmlClavesUs & "<row apellido_paterno = """ & row!aPaterno & """/>"
-                strXmlClavesUs = strXmlClavesUs & "<row apellido_materno = """ & row!aMaterno & """/>"
-                strXmlClavesUs = strXmlClavesUs & "<row telefono_casa = """"/>"
-                strXmlClavesUs = strXmlClavesUs & "<row telefono_celular = """"/>"
-                strXmlClavesUs = strXmlClavesUs & "<row telefono_oficina = """"/>"
-                strXmlClavesUs = strXmlClavesUs & "<row direccion = """"/>"
-                strXmlClavesUs = strXmlClavesUs & "<row login = """ & row!claveUsuario & """/>"
-                strXmlClavesUs = strXmlClavesUs & "<row contrasenya = """ & PswEncriptado & """/>"
-                strXmlClavesUs = strXmlClavesUs & "<row almacen_fk = """ & 1 & """/>"
-                strXmlClavesUs = strXmlClavesUs & "<row rol_fk = """ & 1 & """/>"
+                strXmlClavesUs = strXmlClavesUs & "<row curp = """ & row!claveUsuario & """"
+                strXmlClavesUs = strXmlClavesUs & " nombres = """ & row!nombre & """"
+                strXmlClavesUs = strXmlClavesUs & " apellido_paterno = """ & row!aPaterno & """"
+                strXmlClavesUs = strXmlClavesUs & " apellido_materno = """ & row!aMaterno & """"
+                strXmlClavesUs = strXmlClavesUs & " telefono_casa = """""
+                strXmlClavesUs = strXmlClavesUs & " telefono_celular = """""
+                strXmlClavesUs = strXmlClavesUs & " telefono_oficina = """""
+                strXmlClavesUs = strXmlClavesUs & " direccion = """""
+                strXmlClavesUs = strXmlClavesUs & " login = """ & row!claveUsuario & """"
+                strXmlClavesUs = strXmlClavesUs & " contrasenya = """ & PswEncriptado & """"
+                strXmlClavesUs = strXmlClavesUs & " almacen_fk = """ & 1 & """"
+                strXmlClavesUs = strXmlClavesUs & " rol_fk = """ & 1 & """/>"
             Next
 
             strXmlClavesUs = strXmlClavesUs & "</items></data>"
 
-            spCreaUsuario.usp_users_insert(MySqlCon, Nothing, Nothing, strXmlClavesUs, successUs)
+            spCreaUsuario.usp_users_insert(MySqlCon, Nothing, Nothing, strXmlClavesUs, successUs, usuariosNoCreados)
 
-            elogLogEventos.WriteEntry("Se procesaron los usuarios faltantes" & strXmlClavesUs)
+            elogLogEventos.WriteEntry("Se procesaron los usuarios faltantes" & strXmlClavesUs & " ya existen en farmacia los usuarios: " & usuariosNoCreados)
         Catch ex As MySqlException
             elogLogEventos.WriteEntry("Error procesando nuevos usuarios" & strXmlClavesUs)
             Throw ex
