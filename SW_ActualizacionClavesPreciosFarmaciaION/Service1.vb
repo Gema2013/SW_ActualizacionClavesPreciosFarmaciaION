@@ -114,7 +114,6 @@ Public Class ServicioActualizacionION
             Dim sp As New SP_BBDD.ObtenerClavesNuevas_select
             sp.ObtenerClavesNuevas_select(conexion, Nothing, dt)
 
-
             elogLogEventos.WriteEntry("Obtuve :" & dt.Rows.Count & " claves sin procesar")
 
 
@@ -128,76 +127,77 @@ Public Class ServicioActualizacionION
             End If
         End Try
 
+        If dt.Rows.Count > 0 Then
+            Dim MiConexion As SqlConnection = Nothing
+            Dim tran As SqlTransaction = Nothing
+            Dim dtClavesNoProcesadas As New DataTable
+            Dim strXmlClaves As String = "<data><items>"
+            Try
+                MiConexion = Conexiones.Conexion
+                MiConexion.Open()
+                tran = MiConexion.BeginTransaction(IsolationLevel.ReadUncommitted)
 
-        Dim MiConexion As SqlConnection = Nothing
-        Dim tran As SqlTransaction = Nothing
-        Dim dtClavesNoProcesadas As New DataTable
-        Dim strXmlClaves As String = "<data><items>"
-        Try
-            MiConexion = Conexiones.Conexion
-            MiConexion.Open()
-            tran = MiConexion.BeginTransaction(IsolationLevel.ReadUncommitted)
+                'Inserta nuevas claves en BD de ion
+                Dim spInserta As New SP_BBDD.TCCB_Procedimientos_insert
+                Dim i As Integer = 0
+                For Each row In dt.Rows
+                    spInserta.TCCB_Procedimientos_insert(MiConexion, tran, Nothing, row!codigo, row!nombre, row!impuesto_fk, row!precio_venta, row!codigo_barras, row!activo)
+                    strXmlClaves = strXmlClaves & "<row catalogo_k = """ & row!catalogo_k & """/>"
+                    'El exit es para realizar pruebas 1 x1
+                    'Exit For
+                    i = i + 1
+                    If i = 50 Then
+                        Exit For
+                    End If
+                Next
+                strXmlClaves = strXmlClaves & "</items></data>"
 
-            'Inserta nuevas claves en BD de ion
-            Dim spInserta As New SP_BBDD.TCCB_Procedimientos_insert
-            Dim i As Integer = 0
-            For Each row In dt.Rows
-                spInserta.TCCB_Procedimientos_insert(MiConexion, tran, Nothing, row!codigo, row!nombre, row!impuesto_fk, row!precio_venta, row!codigo_barras, row!activo)
-                strXmlClaves = strXmlClaves & "<row catalogo_k = """ & row!catalogo_k & """/>"
-                'El exit es para realizar pruebas 1 x1
-                'Exit For
-                i = i + 1
-                If i = 50 Then
-                    Exit For
+                tran.Commit()
+                elogLogEventos.WriteEntry("Se insertaron las claves" & strXmlClaves)
+            Catch ex As Exception
+                If tran IsNot Nothing Then
+                    tran.Rollback()
                 End If
-            Next
-            strXmlClaves = strXmlClaves & "</items></data>"
-
-            tran.Commit()
-            elogLogEventos.WriteEntry("Se insertaron las claves" & strXmlClaves)
-        Catch ex As Exception
-            If tran IsNot Nothing Then
-                tran.Rollback()
-            End If
-            elogLogEventos.WriteEntry("Error insertando claves nuevas. Error: " & ex.ToString, EventLogEntryType.Error)
-            Throw ex
-        Finally
-            If MiConexion IsNot Nothing Then
-                MiConexion.Close()
-                MiConexion.Dispose()
-            End If
-        End Try
+                elogLogEventos.WriteEntry("Error insertando claves nuevas. Error: " & ex.ToString, EventLogEntryType.Error)
+                Throw ex
+            Finally
+                If MiConexion IsNot Nothing Then
+                    MiConexion.Close()
+                    MiConexion.Dispose()
+                End If
+            End Try
 
 
 
-        'Actualizar claves procesadas en Farmacia
-        Dim MyCon As MySqlConnection = Nothing
-        Dim success As Boolean = False
+            'Actualizar claves procesadas en Farmacia
+            Dim MyCon As MySqlConnection = Nothing
+            Dim success As Boolean = False
 
-        Try
-            MyCon = Conexiones.ConexionMySQL
-            MyCon.Open()
+            Try
+                MyCon = Conexiones.ConexionMySQL
+                MyCon.Open()
 
-            'Inserta nuevas claves en BD de ion
-            Dim spAct As New SP_BBDD.ActualizaPreciosMedicamentos_UpdateInsert
-            spAct.ActualizaPreciosMedicamentos_UpdateInsert(MyCon, Nothing, Nothing, strXmlClaves, success)
-            If success Then
-                elogLogEventos.WriteEntry("Se actualizaron estatus de claves procesadas." & strXmlClaves)
-            Else
-                elogLogEventos.WriteEntry("No se procesaron correctamente las claves: " & strXmlClaves)
-            End If
+                'Inserta nuevas claves en BD de ion
+                Dim spAct As New SP_BBDD.ActualizaPreciosMedicamentos_UpdateInsert
+                spAct.ActualizaPreciosMedicamentos_UpdateInsert(MyCon, Nothing, Nothing, strXmlClaves, success)
+                If success Then
+                    elogLogEventos.WriteEntry("Se actualizaron estatus de claves procesadas." & strXmlClaves)
+                Else
+                    elogLogEventos.WriteEntry("No se procesaron correctamente las claves: " & strXmlClaves)
+                End If
 
-        Catch ex As Exception
-            elogLogEventos.WriteEntry("Error actualizando claves procesadas. Error: " & ex.ToString, EventLogEntryType.Error)
-            Throw ex
-        Finally
-            If MyCon IsNot Nothing Then
-                MyCon.Close()
-                MyCon.Dispose()
-            End If
-        End Try
-
-
+            Catch ex As Exception
+                elogLogEventos.WriteEntry("Error actualizando claves procesadas. Error: " & ex.ToString, EventLogEntryType.Error)
+                Throw ex
+            Finally
+                If MyCon IsNot Nothing Then
+                    MyCon.Close()
+                    MyCon.Dispose()
+                End If
+            End Try
+        Else
+            elogLogEventos.WriteEntry("No hay claves para procesar.")
+        End If
     End Sub
 
     Private Sub ActualizacionUsuariosFarmacia()
@@ -213,6 +213,9 @@ Public Class ServicioActualizacionION
             'Obtiene las claves de usuario no procesadas
             Dim spClavesUs As New SP_BBDD.ObtienePendientesProcesaFarm_select
             spClavesUs.ObtienePendientesProcesaFarm_select(SqlConexion, SqlTran, dtClavesUsNoProcesadas)
+
+            elogLogEventos.WriteEntry("Obtuve " & dtClavesUsNoProcesadas.Rows.Count & "usuarios para procesar")
+
         Catch ex As Exception
             elogLogEventos.WriteEntry("Error obteniendo claves de usuario no procesadas. Error: " & ex.ToString, EventLogEntryType.Error)
             Throw ex
@@ -223,94 +226,96 @@ Public Class ServicioActualizacionION
             End If
         End Try
 
-
-        'Enviar claves de usuario a insertar en mysql
-        Dim MySqlCon As MySqlConnection = Nothing
-        Dim strXmlClavesUs As String = "<data><items>"
-        Dim successUs As Boolean = False
-        Dim usuariosNoCreados As String = False
-
-        Try
-            MySqlCon = Conexiones.ConexionMySQL
-            MySqlCon.Open()
-            elogLogEventos.WriteEntry("Conectado al servidor MySql para enviar claves de usuario a crear....")
-            Dim spCreaUsuario As New SP_BBDD.usp_users_insert()
-
-
-            Dim i As Integer = 0
-            For Each row In dtClavesUsNoProcesadas.Rows
-                Dim Psw As String = row!claveUsuario + "_ion381"
-                Dim PswEncriptado = CodeShare.Cryptography.Encriptacion.GenerateSHA256String(Psw)
-                strXmlClavesUs = strXmlClavesUs & "<row curp = """ & row!claveUsuario & """"
-                strXmlClavesUs = strXmlClavesUs & " nombres = """ & row!nombre & """"
-                strXmlClavesUs = strXmlClavesUs & " apellido_paterno = """ & row!aPaterno & """"
-                strXmlClavesUs = strXmlClavesUs & " apellido_materno = """ & row!aMaterno & """"
-                strXmlClavesUs = strXmlClavesUs & " telefono_casa = """""
-                strXmlClavesUs = strXmlClavesUs & " telefono_celular = """""
-                strXmlClavesUs = strXmlClavesUs & " telefono_oficina = """""
-                strXmlClavesUs = strXmlClavesUs & " direccion = """""
-                strXmlClavesUs = strXmlClavesUs & " login = """ & row!claveUsuario & """"
-                strXmlClavesUs = strXmlClavesUs & " contrasenya = """ & PswEncriptado & """"
-                strXmlClavesUs = strXmlClavesUs & " almacen_fk = """ & 1 & """"
-                strXmlClavesUs = strXmlClavesUs & " rol_fk = """ & 1 & """/>"
-            Next
-
-            strXmlClavesUs = strXmlClavesUs & "</items></data>"
-
-            spCreaUsuario.usp_users_insert(MySqlCon, Nothing, Nothing, strXmlClavesUs, successUs, usuariosNoCreados)
-
-            elogLogEventos.WriteEntry("Se procesaron los usuarios faltantes" & strXmlClavesUs & " ya existen en farmacia los usuarios: " & usuariosNoCreados)
-        Catch ex As MySqlException
-            elogLogEventos.WriteEntry("Error procesando nuevos usuarios" & strXmlClavesUs)
-            Throw ex
-        Finally
-            If MySqlCon IsNot Nothing Then
-                MySqlCon.Close()
-                MySqlCon.Dispose()
-            End If
-        End Try
-
-
-
-
-
-        If successUs Then
-            'Actualizar claves de usuario procesados en SQL
-            SqlConexion = Nothing
-            SqlTran = Nothing
-            Dim dtActualizarClaves As New DataTable
+        If dtClavesUsNoProcesadas.Rows.Count > 0 Then
+            'Enviar claves de usuario a insertar en mysql
+            Dim MySqlCon As MySqlConnection = Nothing
+            Dim strXmlClavesUs As String = "<data><items>"
+            Dim successUs As Boolean = False
+            Dim usuariosNoCreados As String = False
 
             Try
-                SqlConexion = Conexiones.Conexion
-                SqlConexion.Open()
-                SqlTran = SqlConexion.BeginTransaction(IsolationLevel.ReadUncommitted)
+                MySqlCon = Conexiones.ConexionMySQL
+                MySqlCon.Open()
+                elogLogEventos.WriteEntry("Conectado al servidor MySql para enviar claves de usuario a crear....")
+                Dim spCreaUsuario As New SP_BBDD.usp_users_insert()
 
-                'Inserta nuevas claves en BD de ion
-                Dim spActualiza As New SP_BBDD.ActualizaPendientesProcesaFarm_update
+
                 Dim i As Integer = 0
                 For Each row In dtClavesUsNoProcesadas.Rows
-                    spActualiza.ActualizaPendientesProcesaFarm_update(SqlConexion, SqlTran, Nothing, row!claveUsuario)
-
+                    Dim Psw As String = row!claveUsuario + "_ion381"
+                    Dim PswEncriptado = CodeShare.Cryptography.Encriptacion.GenerateSHA256String(Psw)
+                    strXmlClavesUs = strXmlClavesUs & "<row curp = """ & row!claveUsuario & """"
+                    strXmlClavesUs = strXmlClavesUs & " nombres = """ & row!nombre & """"
+                    strXmlClavesUs = strXmlClavesUs & " apellido_paterno = """ & row!aPaterno & """"
+                    strXmlClavesUs = strXmlClavesUs & " apellido_materno = """ & row!aMaterno & """"
+                    strXmlClavesUs = strXmlClavesUs & " telefono_casa = """""
+                    strXmlClavesUs = strXmlClavesUs & " telefono_celular = """""
+                    strXmlClavesUs = strXmlClavesUs & " telefono_oficina = """""
+                    strXmlClavesUs = strXmlClavesUs & " direccion = """""
+                    strXmlClavesUs = strXmlClavesUs & " login = """ & row!claveUsuario & """"
+                    strXmlClavesUs = strXmlClavesUs & " contrasenya = """ & PswEncriptado & """"
+                    strXmlClavesUs = strXmlClavesUs & " almacen_fk = """ & 1 & """"
+                    strXmlClavesUs = strXmlClavesUs & " rol_fk = """ & 1 & """/>"
                 Next
 
-                SqlTran.Commit()
-                elogLogEventos.WriteEntry("Se actualizó estatus de usuarios en base ION" & strXmlClavesUs)
-            Catch ex As Exception
-                If SqlTran IsNot Nothing Then
-                    SqlTran.Rollback()
-                End If
-                elogLogEventos.WriteEntry("Error actualizando estatus de claves de usuario procesadas. Error: " & ex.ToString, EventLogEntryType.Error)
+                strXmlClavesUs = strXmlClavesUs & "</items></data>"
+
+                spCreaUsuario.usp_users_insert(MySqlCon, Nothing, Nothing, strXmlClavesUs, successUs, usuariosNoCreados)
+
+                elogLogEventos.WriteEntry("Se procesaron los usuarios faltantes" & strXmlClavesUs & " ya existen en farmacia los usuarios: " & usuariosNoCreados)
+            Catch ex As MySqlException
+                elogLogEventos.WriteEntry("Error procesando nuevos usuarios" & strXmlClavesUs)
                 Throw ex
             Finally
-                If SqlConexion IsNot Nothing Then
-                    SqlConexion.Close()
-                    SqlConexion.Dispose()
+                If MySqlCon IsNot Nothing Then
+                    MySqlCon.Close()
+                    MySqlCon.Dispose()
                 End If
             End Try
-        Else
-            elogLogEventos.WriteEntry("No se realizó la actualización de claves de usuario en ION." & strXmlClavesUs & " Sucess:" & successUs)
-        End If
 
+
+
+
+
+            If successUs Then
+                'Actualizar claves de usuario procesados en SQL
+                SqlConexion = Nothing
+                SqlTran = Nothing
+                Dim dtActualizarClaves As New DataTable
+
+                Try
+                    SqlConexion = Conexiones.Conexion
+                    SqlConexion.Open()
+                    SqlTran = SqlConexion.BeginTransaction(IsolationLevel.ReadUncommitted)
+
+                    'Inserta nuevas claves en BD de ion
+                    Dim spActualiza As New SP_BBDD.ActualizaPendientesProcesaFarm_update
+                    Dim i As Integer = 0
+                    For Each row In dtClavesUsNoProcesadas.Rows
+                        spActualiza.ActualizaPendientesProcesaFarm_update(SqlConexion, SqlTran, Nothing, row!claveUsuario)
+
+                    Next
+
+                    SqlTran.Commit()
+                    elogLogEventos.WriteEntry("Se actualizó estatus de usuarios en base ION" & strXmlClavesUs)
+                Catch ex As Exception
+                    If SqlTran IsNot Nothing Then
+                        SqlTran.Rollback()
+                    End If
+                    elogLogEventos.WriteEntry("Error actualizando estatus de claves de usuario procesadas. Error: " & ex.ToString, EventLogEntryType.Error)
+                    Throw ex
+                Finally
+                    If SqlConexion IsNot Nothing Then
+                        SqlConexion.Close()
+                        SqlConexion.Dispose()
+                    End If
+                End Try
+            Else
+                elogLogEventos.WriteEntry("No se realizó la actualización de claves de usuario en ION." & strXmlClavesUs & " Sucess:" & successUs)
+            End If
+        Else
+            elogLogEventos.WriteEntry("No hay claves de usuario pendientes para procesar")
+        End If
     End Sub
 
 
