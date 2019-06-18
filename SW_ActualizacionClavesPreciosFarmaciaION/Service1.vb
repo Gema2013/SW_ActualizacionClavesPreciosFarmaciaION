@@ -244,6 +244,7 @@ Public Class ServicioActualizacionION
                 For Each row In dtClavesUsNoProcesadas.Rows
                     Dim Psw As String = row!claveUsuario + "_ion381"
                     Dim PswEncriptado = CodeShare.Cryptography.Encriptacion.GenerateSHA256String(Psw)
+                    PswEncriptado = CodeShare.Cryptography.Encriptacion.MD5EncryptPass(PswEncriptado)
                     strXmlClavesUs = strXmlClavesUs & "<row curp = """ & row!claveUsuario & """"
                     strXmlClavesUs = strXmlClavesUs & " nombres = """ & row!nombre & """"
                     strXmlClavesUs = strXmlClavesUs & " apellido_paterno = """ & row!aPaterno & """"
