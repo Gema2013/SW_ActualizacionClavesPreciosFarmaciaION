@@ -15,7 +15,7 @@ Public Class Encriptacion
                 stringBuilder.Append(hash(i).ToString("X2"))
             Next
 
-            Return stringBuilder.ToString()
+            Return stringBuilder.ToString().ToLower()
         End Function
 
         Public Shared Function MD5EncryptPass(ByVal StrPass As String) As String
